@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="bar_extra_reporte_ventas_diario_wizard_view" model="ir.ui.view">
+        <field name="name">bar_extra.reporte_ventas_diario.wizard.form</field>
+        <field name="model">bar_extra.reporte_ventas_diario.wizard</field>
+        <field name="arch" type="xml">
+
+            <form string="Reporte ventas diario">
+                <group>
+
+                    <field name="fecha_hora_inicio"/>
+                    <field name="fecha_hora_final"/>
+                    <field name="punto_venta" tag="many2many"/>
+
+                </group>
+                <group>
+                    <field name="name" invisible="1"/>
+                    <field name="archivo" readonly="1" filename="name"/>
+                </group>
+                <footer>
+                    <button name="print_report_excel" string="Reporte excel" type="object" class="oe_highlight"/>
+                    or
+                    <button special="cancel" string="Cancel"/>
+                </footer>
+            </form>
+        </field>
+
+    </record>
+
+    <record id="action_reporte_ventas_diaro" model="ir.actions.act_window">
+        <field name="name">Reporte de ventas diario</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">bar_extra.reporte_ventas_diario.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="rprte_vntas_diario" name="Reporte de ventas diario" parent="point_of_sale.menu_point_rep" sequence="9" />
+
+
+</odoo>

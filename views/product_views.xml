@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="bar_extra_product_template_form_view" model="ir.ui.view">
+        <field name="name">bar_extra.product.template.product.form</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <!-- <page name="general_information" position="after">
+                <page name="hospital" string="Hospital">
+                    <group>
+                        <field name="nombre_generico"/>
+                        <field name="laboratorio"/>
+                        <field name="presentacion"/>
+                    </group>
+                </page>
+            </page> -->
+            <!-- <field name="company_id" position="after">
+              <field name="propina"/>
+            </field> -->
+
+            <xpath expr="//field[@name='company_id']" position="after">
+              <field name="propina"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
