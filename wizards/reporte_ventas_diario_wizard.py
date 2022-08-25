@@ -29,7 +29,7 @@ class ReporteVentasDiarioWizard(models.TransientModel):
         return self.env.ref('bar_extra.action_reporte_ventas_diario').report_action([], data=data)
 
     def print_report_excel(self):
-        
+
         for w in self:
 
             puntos_venta_ids = w.punto_venta.ids
@@ -38,7 +38,7 @@ class ReporteVentasDiarioWizard(models.TransientModel):
             ('date_order', '>=', w.fecha_hora_inicio),
             ('date_order', '<=', w.fecha_hora_final)], order='date_order asc')
             columna = 1
-
+            logging.warning(pedidos)
             f = io.BytesIO()
             libro = xlsxwriter.Workbook(f)
             hoja = libro.add_worksheet('Reporte de ventas diario')
@@ -62,17 +62,17 @@ class ReporteVentasDiarioWizard(models.TransientModel):
                         'acumulado':0,
                         'propina':0
                         }
-                    if pedido.session_id.config_id.pricelist_id.name not in list_tarifa:
-                        list_tarifa.append(pedido.session_id.config_id.pricelist_id.name)
+                    if pedido.pricelist_id.name not in list_tarifa:
+                        list_tarifa.append(pedido.pricelist_id.name)
 
                     if fecha in dicc_pedidos:
-                        if pedido.session_id.config_id.pricelist_id.id not in dicc_pedidos[fecha]['dicc_tarifas']:
-                            dicc_pedidos[fecha]['dicc_tarifas'][pedido.session_id.config_id.pricelist_id.id]={
-                            'nombre': pedido.session_id.config_id.pricelist_id.name,
+                        if pedido.pricelist_id.id not in dicc_pedidos[fecha]['dicc_tarifas']:
+                            dicc_pedidos[fecha]['dicc_tarifas'][pedido.pricelist_id.id]={
+                            'nombre': pedido.pricelist_id.name,
                             'total':0
                             }
-                        if pedido.session_id.config_id.pricelist_id.id in dicc_pedidos[fecha]['dicc_tarifas']:
-                            dicc_pedidos[fecha]['dicc_tarifas'][pedido.session_id.config_id.pricelist_id.id]['total']+=pedido.amount_total
+                        if pedido.pricelist_id.id in dicc_pedidos[fecha]['dicc_tarifas']:
+                            dicc_pedidos[fecha]['dicc_tarifas'][pedido.pricelist_id.id]['total']+=pedido.amount_total
                         for linea_prod in pedido.lines:
                             if linea_prod.product_id.propina:
                                 dicc_pedidos[fecha]['propina']+=linea_prod.price_unit * linea_prod.qty
