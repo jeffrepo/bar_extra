@@ -13,9 +13,9 @@ class ReporteVentasDiarioWizard(models.TransientModel):
     _name = "bar_extra.reporte_ventas_diario.wizard"
     _description = "Genera un reporte de ventas diario"
 
-    fecha_hora_inicio = fields.Datetime('Fecha y hora inicio:')
-    fecha_hora_final = fields.Datetime('Fecha y hora final:')
-    punto_venta = fields.Many2many( 'pos.config',string='Punto de venta')
+    # fecha_hora_inicio = fields.Datetime('Fecha y hora inicio:')
+    # fecha_hora_final = fields.Datetime('Fecha y hora final:')
+    sesiones = fields.Many2many( 'pos.session',string='Sesiones')
 
     name = fields.Char('Nombre archivo: ', size=32)
     archivo = fields.Binary('Archivo ', filters='.xls')
@@ -32,25 +32,29 @@ class ReporteVentasDiarioWizard(models.TransientModel):
 
         for w in self:
 
-            puntos_venta_ids = w.punto_venta.ids
-
-            pedidos = self.env['pos.order'].search([
-            ('date_order', '>=', w.fecha_hora_inicio),
-            ('date_order', '<=', w.fecha_hora_final)], order='date_order asc')
+            # puntos_venta_ids = w.punto_venta.ids
+            #
+            # pedidos = self.env['pos.order'].search([
+            # ('date_order', '>=', w.fecha_hora_inicio),
+            # ('date_order', '<=', w.fecha_hora_final)], order='date_order asc')
             columna = 1
-            logging.warning(pedidos)
+
             f = io.BytesIO()
             libro = xlsxwriter.Workbook(f)
             hoja = libro.add_worksheet('Reporte de ventas diario')
+
+            list_sessions = w.sesiones.ids
+
+            pedidos = self.env['pos.order'].search([('session_id', 'in', list_sessions)], order='date_order asc')
+            logging.warning(pedidos)
 
             dicc_pedidos={}
             list_tarifa = []
             list_pagos = []
 
             for pedido in pedidos:
-                if pedido.session_id.config_id.id in puntos_venta_ids:
-                    fecha = pedido.date_order.date().strftime('%d/%m/%Y')
-
+                fecha = pedido.date_order.date().strftime('%d/%m/%Y')
+                if fecha not in dicc_pedidos:
                     if fecha not in dicc_pedidos:
                         dicc_pedidos[fecha]={
                         'fecha':fecha,
@@ -64,7 +68,6 @@ class ReporteVentasDiarioWizard(models.TransientModel):
                         }
                     if pedido.pricelist_id.name not in list_tarifa:
                         list_tarifa.append(pedido.pricelist_id.name)
-
                     if fecha in dicc_pedidos:
                         if pedido.pricelist_id.id not in dicc_pedidos[fecha]['dicc_tarifas']:
                             dicc_pedidos[fecha]['dicc_tarifas'][pedido.pricelist_id.id]={
@@ -76,6 +79,7 @@ class ReporteVentasDiarioWizard(models.TransientModel):
                         for linea_prod in pedido.lines:
                             if linea_prod.product_id.propina:
                                 dicc_pedidos[fecha]['propina']+=linea_prod.price_unit * linea_prod.qty
+
                     for pago in pedido.payment_ids:
                         if fecha in dicc_pedidos:
                             if pago.payment_method_id.id not in dicc_pedidos[fecha]['metodos_pago']:
@@ -90,7 +94,54 @@ class ReporteVentasDiarioWizard(models.TransientModel):
                     if fecha in dicc_pedidos:
                         dicc_pedidos[fecha]['total_fecha']+=pedido.amount_total
 
-
+            # dicc_pedidos={}
+            # list_tarifa = []
+            # list_pagos = []
+            #
+            # for pedido in pedidos:
+            #     if pedido.session_id.config_id.id in puntos_venta_ids:
+            #         fecha = pedido.date_order.date().strftime('%d/%m/%Y')
+            #
+            #         if fecha not in dicc_pedidos:
+            #             dicc_pedidos[fecha]={
+            #             'fecha':fecha,
+            #             'dicc_tarifas': {},
+            #             'total_fecha': 0,
+            #             'metodos_pago':{},
+            #             'total_metodos_pago':0,
+            #             'diferencia':0,
+            #             'acumulado':0,
+            #             'propina':0
+            #             }
+            #         if pedido.pricelist_id.name not in list_tarifa:
+            #             list_tarifa.append(pedido.pricelist_id.name)
+            #
+            #         if fecha in dicc_pedidos:
+            #             if pedido.pricelist_id.id not in dicc_pedidos[fecha]['dicc_tarifas']:
+            #                 dicc_pedidos[fecha]['dicc_tarifas'][pedido.pricelist_id.id]={
+            #                 'nombre': pedido.pricelist_id.name,
+            #                 'total':0
+            #                 }
+            #             if pedido.pricelist_id.id in dicc_pedidos[fecha]['dicc_tarifas']:
+            #                 dicc_pedidos[fecha]['dicc_tarifas'][pedido.pricelist_id.id]['total']+=pedido.amount_total
+            #             for linea_prod in pedido.lines:
+            #                 if linea_prod.product_id.propina:
+            #                     dicc_pedidos[fecha]['propina']+=linea_prod.price_unit * linea_prod.qty
+            #         for pago in pedido.payment_ids:
+            #             if fecha in dicc_pedidos:
+            #                 if pago.payment_method_id.id not in dicc_pedidos[fecha]['metodos_pago']:
+            #                     dicc_pedidos[fecha]['metodos_pago'][pago.payment_method_id.id]={
+            #                     'payment_name':pago.payment_method_id.name,
+            #                     'total':0
+            #                     }
+            #                 if pago.payment_method_id.name not in list_pagos:
+            #                     list_pagos.append(pago.payment_method_id.name)
+            #             if pago.payment_method_id.id in dicc_pedidos[fecha]['metodos_pago']:
+            #                 dicc_pedidos[fecha]['metodos_pago'][pago.payment_method_id.id]['total']+=pago.amount
+            #         if fecha in dicc_pedidos:
+            #             dicc_pedidos[fecha]['total_fecha']+=pedido.amount_total
+            #
+            #
             #Tamaño de las columnas
             hoja.set_column('A:A', 15)
             hoja.set_column('B:Z', 20)
@@ -146,7 +197,7 @@ class ReporteVentasDiarioWizard(models.TransientModel):
 
 
                 fila+=1
-
+            
             logging.warning('dicc_pedidos')
             logging.warning(dicc_pedidos)
 

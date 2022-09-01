@@ -8,10 +8,10 @@
 
             <form string="Reporte ventas diario">
                 <group>
-
-                    <field name="fecha_hora_inicio"/>
+                    <field name='sesiones'/>
+                    <!-- <field name="fecha_hora_inicio"/>
                     <field name="fecha_hora_final"/>
-                    <field name="punto_venta" tag="many2many"/>
+                    <field name="punto_venta" tag="many2many"/> -->
 
                 </group>
                 <group>
